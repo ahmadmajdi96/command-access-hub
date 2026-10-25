@@ -9,7 +9,7 @@ import { useAssignments, useHubAdmins, useProfiles, useRoles, useSystems, type P
 import { createUser, deleteUser, resetUserPassword, setHubAdmin, setUserActive } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/users")({
-  head: () => ({ meta: [{ title: "Users · Cortanex Access Hub" }, { name: "description", content: "Create accounts and assign roles per system." }] }),
+  head: () => ({ meta: [{ title: "Users · Cortanex Access Hub" }, { name: "description", content: "Create accounts and assign roles per system." }, { property: "og:title", content: "Users · Cortanex Access Hub" }, { property: "og:description", content: "Create accounts and assign roles per system." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: UsersPage,
 });
 
