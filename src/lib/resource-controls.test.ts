@@ -10,13 +10,13 @@ describe("scoped resource controls", () => {
   });
   it("batch edit grants view only to visible target resources", () => {
     const result = batchPermissions({ order: { ...EMPTY } }, ["qc"], "can_edit", true);
-    expect(result.qc).toEqual({ can_view: true, can_create: false, can_edit: true, can_delete: false });
-    expect(result.order).toEqual(EMPTY);
+    expect(result["qc"]).toEqual({ can_view: true, can_create: false, can_edit: true, can_delete: false });
+    expect(result["order"]).toEqual(EMPTY);
   });
   it("batch removing view clears dependent rights while preserving hidden resources", () => {
     const full = { can_view: true, can_create: true, can_edit: true, can_delete: true };
     const result = batchPermissions({ qc: full, order: full }, ["qc"], "can_view", false);
-    expect(result.qc).toEqual(EMPTY);
-    expect(result.order).toEqual(full);
+    expect(result["qc"]).toEqual(EMPTY);
+    expect(result["order"]).toEqual(full);
   });
 });
