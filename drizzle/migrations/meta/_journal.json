@@ -22,6 +22,13 @@
       "when": 1792912454828,
       "tag": "0002_one_time_super_admin_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792912561793,
+      "tag": "0003_restrict_initialization_claim_storage",
+      "breakpoints": true
     }
   ]
 }
