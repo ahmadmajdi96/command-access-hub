@@ -44,6 +44,27 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_initialization: {
+        Row: {
+          claim_token: string | null
+          claimed_at: string | null
+          completed_at: string | null
+          singleton: boolean
+        }
+        Insert: {
+          claim_token?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          singleton?: boolean
+        }
+        Update: {
+          claim_token?: string | null
+          claimed_at?: string | null
+          completed_at?: string | null
+          singleton?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -277,6 +298,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_hub_setup: { Args: { _token: string }; Returns: boolean }
       effective_permissions: {
         Args: { _system_key: string; _user_id: string }
         Returns: {
@@ -298,7 +320,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      hub_setup_available: { Args: never; Returns: boolean }
       is_hub_admin: { Args: { _user_id: string }; Returns: boolean }
+      release_hub_setup: { Args: { _token: string }; Returns: undefined }
       rotate_system_api_key: { Args: { _system_id: string }; Returns: string }
     }
     Enums: {

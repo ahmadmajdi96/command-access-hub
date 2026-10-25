@@ -1,6 +1,29 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { initialSetupCredentials, initializeFirstAdmin } from "./initial-setup";
+
+// This is deliberately public, but a durable, service-role-only claim and
+// auth creation trigger authorize it exactly once. Public signup stays off.
+export const initializeSuperAdmin = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => initialSetupCredentials.parse(input))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    return initializeFirstAdmin(data, crypto.randomUUID(), {
+      claim: async (token) => {
+        const { data: claimed, error } = await supabaseAdmin.rpc("claim_hub_setup", { _token: token });
+        if (error) throw new Error("Could not check first-time setup. Please try again.");
+        return claimed === true;
+      },
+      release: async (token) => {
+        await supabaseAdmin.rpc("release_hub_setup", { _token: token });
+      },
+      create: async (credentials) => {
+        const { data: created, error } = await supabaseAdmin.auth.admin.createUser(credentials);
+        if (error || !created.user) throw new Error("Could not initialize the account. Check your email and password and try again.");
+      },
+    });
+  });
 
 type Ctx = { supabase: any; userId: string };
 

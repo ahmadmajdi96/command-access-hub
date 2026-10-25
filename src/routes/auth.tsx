@@ -1,8 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { initializeSuperAdmin } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -24,9 +28,21 @@ const input =
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "forgot">("signin");
+  const [mode, setMode] = useState<"signin" | "forgot" | "setup">("signin");
+  const initialize = useServerFn(initializeSuperAdmin);
+  const setup = useQuery({
+    queryKey: ["initial-setup"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("hub_setup_available");
+      if (error) throw new Error("Could not check first-time setup.");
+      return data === true;
+    },
+    staleTime: 0,
+    retry: 1,
+  });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -41,8 +57,14 @@ function AuthPage() {
     setBusy(true);
     setNotice(null);
     try {
-      if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (mode !== "forgot") {
+        if (mode === "setup") {
+          if (password !== confirmPassword) throw new Error("Passwords do not match.");
+          await initialize({ data: { email, password } });
+          setMode("signin");
+          void setup.refetch();
+        }
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         toast.success("Welcome back");
         navigate({ to: "/dashboard", replace: true });
@@ -57,6 +79,7 @@ function AuthPage() {
       const message = err instanceof Error ? err.message : "Something went wrong";
       setNotice(message);
       toast.error(message);
+      if (mode === "setup") void setup.refetch();
     } finally {
       setBusy(false);
     }
@@ -75,6 +98,7 @@ function AuthPage() {
           </div>
         </div>
         <div className="glass-panel rounded-2xl p-6">
+          {mode === "setup" && <h2 className="mb-4 font-display text-lg font-semibold">Initialize super-admin</h2>}
           <form onSubmit={onSubmit} className="space-y-3">
             <label className="block">
               <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Email</span>
@@ -83,26 +107,41 @@ function AuthPage() {
                 <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" className={input} />
               </div>
             </label>
-            {mode === "signin" && (
+            {mode !== "forgot" && (
               <label className="block">
                 <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Password</span>
                 <div className="relative mt-1">
                   <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                  <input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={input} />
+                  <input type="password" required minLength={mode === "setup" ? 10 : undefined} maxLength={128} autoComplete={mode === "setup" ? "new-password" : "current-password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "setup" ? "At least 10 characters" : "••••••••"} className={input} />
                 </div>
               </label>
             )}
-            <button type="button" onClick={() => { setMode(mode === "signin" ? "forgot" : "signin"); setNotice(null); }} className="text-[11px] text-primary hover:underline">
+            {mode === "setup" && (
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Confirm password</span>
+                <div className="relative mt-1">
+                  <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input type="password" required minLength={10} maxLength={128} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your password" className={input} />
+                </div>
+              </label>
+            )}
+            <Button variant="link" type="button" disabled={busy} onClick={() => { setMode(mode === "signin" ? "forgot" : "signin"); setNotice(null); }} className="h-auto p-0 text-[11px]">
               {mode === "signin" ? "Forgot password?" : "Back to sign in"}
-            </button>
-            {notice && <div className="rounded-lg border border-border/60 bg-background/40 p-2 text-xs text-muted-foreground">{notice}</div>}
-            <button type="submit" disabled={busy} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60">
+            </Button>
+            {notice && <div role="status" className="rounded-lg border border-border/60 bg-background/40 p-2 text-xs text-muted-foreground">{notice}</div>}
+            <Button type="submit" disabled={busy} className="h-10 w-full rounded-lg">
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-              {mode === "signin" ? "Sign in" : "Send reset link"}
-            </button>
+              {mode === "setup" ? "Create super-admin & sign in" : mode === "signin" ? "Sign in" : "Send reset link"}
+            </Button>
           </form>
+          {mode === "signin" && setup.data === true && (
+            <Button variant="outline" disabled={busy} onClick={() => { setMode("setup"); setNotice(null); setPassword(""); setConfirmPassword(""); }} className="mt-3 h-10 w-full rounded-lg text-xs">
+              <ShieldCheck />First-time setup · Initialize super-admin
+            </Button>
+          )}
+          {setup.isError && mode === "signin" && <Button variant="link" className="mt-2 h-auto p-0 text-xs" onClick={() => setup.refetch()}>Retry setup check</Button>}
           <p className="mt-4 text-center text-[11px] text-muted-foreground">
-            Accounts are created by an administrator. Contact your admin for access.
+            {mode === "setup" ? "One-time setup for the initial hub administrator." : "Accounts are created by an administrator. Contact your admin for access."}
           </p>
         </div>
       </div>

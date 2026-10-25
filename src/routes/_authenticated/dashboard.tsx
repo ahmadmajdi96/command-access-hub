@@ -4,7 +4,7 @@ import { PageHead, Panel } from "@/components/kit";
 import { useAssignments, useProfiles, useResources, useRoles, useSystems } from "@/lib/hub-data";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Access Overview · Cortanex Access Hub" }, { name: "description", content: "Users, roles and systems at a glance." }] }),
+  head: () => ({ meta: [{ title: "Access Overview · Cortanex Access Hub" }, { name: "description", content: "Users, roles and systems at a glance." }, { property: "og:title", content: "Access Overview · Cortanex Access Hub" }, { property: "og:description", content: "Users, roles and systems at a glance." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Dashboard,
 });
 

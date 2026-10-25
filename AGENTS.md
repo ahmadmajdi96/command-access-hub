@@ -13,4 +13,5 @@
 - This app is the central access hub for the Cortanex systems: roles are per system, permissions are rows in role_permissions (view/create/edit/delete per resource). Why: lets admins build roles dynamically without code changes.
 - Connected systems read access only through `/api/public/v1/access` with their per-system API key. Why: each system has its own login backend, so the hub cannot trust their user tokens.
 - Account creation, disabling, password resets and admin grants go through server functions in `src/lib/admin.functions.ts` that verify `is_hub_admin` first. Why: they need privileged auth APIs; public sign-up is disabled.
+- First-time initialization is the sole public account-creation exception: a service-role-only durable claim authorizes an auth trigger to atomically grant super-admin and permanently seal setup. Why: concurrent requests cannot create multiple initial admins, and removing admins cannot reopen setup.
 - Visual design mirrors MES Command Center (dark graphite/cyan tokens in styles.css, glass-panel, shared classes in `src/components/kit.tsx`). Why: the user asked for the exact look of those systems.

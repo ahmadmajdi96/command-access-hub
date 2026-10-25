@@ -8,7 +8,7 @@ import { PageHead, Panel, Modal, Chip, inp, btn, ghost, lbl, logAudit } from "@/
 import { useResources, useSystems, type System } from "@/lib/hub-data";
 
 export const Route = createFileRoute("/_authenticated/systems")({
-  head: () => ({ meta: [{ title: "Systems & Resources · Cortanex Access Hub" }, { name: "description", content: "Register systems and their pages, features and data sets." }] }),
+  head: () => ({ meta: [{ title: "Systems & Resources · Cortanex Access Hub" }, { name: "description", content: "Register systems and their pages, features and data sets." }, { property: "og:title", content: "Systems & Resources · Cortanex Access Hub" }, { property: "og:description", content: "Register systems and their pages, features and data sets." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: SystemsPage,
 });
 
