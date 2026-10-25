@@ -120,8 +120,8 @@ function RolesPage() {
         </select>
       </PageHead>
 
-      <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <Panel title={`Roles · ${roles.length}`} action={<button className={ghost} onClick={() => setEditing({ color: "primary" })}><Plus className="h-3.5 w-3.5" />New</button>}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Panel className="min-w-0" title={`Roles · ${roles.length}`} action={<button className={ghost} onClick={() => setEditing({ color: "primary" })}><Plus className="h-3.5 w-3.5" />New</button>}>
           <div className="space-y-1.5">
             {roles.map((r) => {
               const count = assigns.filter((a) => a.role_id === r.id).length;
@@ -141,9 +141,10 @@ function RolesPage() {
         </Panel>
 
         <Panel
+          className="min-w-0"
           title={role ? `Permissions · ${role.name}` : "Permissions"}
           action={role && (
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               <button className={ghost} onClick={() => setEditing(role)}>Edit</button>
               <button className={ghost} onClick={() => { setCopyFrom(role.id); setEditing({ name: `${role.name} copy`, description: role.description, color: role.color }); }}><Copy className="h-3.5 w-3.5" />Duplicate</button>
               <button className={`${ghost} hover:text-destructive`} onClick={() => deleteRole(role)}><Trash2 className="h-3.5 w-3.5" /></button>
@@ -236,8 +237,7 @@ function ModuleRows({ mod, items, cell, toggle, setColumn }: {
             <td className="py-2">
               <div className="flex min-w-56 items-center gap-2" title={r.description ?? undefined}>
                 <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>{r.name}</span>
-                <span className="font-mono text-[10px] text-muted-foreground">{r.key}</span>
+                <div><span>{r.name}</span><div className="font-mono text-[10px] text-muted-foreground">{r.key}</div></div>
               </div>
             </td>
             {ACTIONS.map((a) => {

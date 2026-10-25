@@ -77,8 +77,8 @@ function SystemsPage() {
         ))}
       </div>
       {system && (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <Panel title={`Resources · ${visible.length} / ${res.length}`}>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <Panel className="min-w-0" title={`Resources · ${visible.length} / ${res.length}`}>
             <div className="mb-4"><ResourceFilters value={filter} onChange={setFilter} modules={[...new Set(res.map((r) => r.module))]} /></div>
             <div className="mb-3 grid gap-2 sm:grid-cols-[110px_1fr_1fr_120px_auto]">
               <select className={inp} value={newRes.kind} onChange={(e) => setNewRes({ ...newRes, kind: e.target.value })}>
