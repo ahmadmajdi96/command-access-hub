@@ -23,7 +23,7 @@ export function Panel({ title, action, children, className = "" }: { title?: str
   return (
     <section className={`glass-panel rounded-2xl p-4 ${className}`}>
       {(title || action) && (
-        <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           {title && <h2 className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{title}</h2>}
           {action}
         </div>

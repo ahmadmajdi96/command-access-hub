@@ -7,6 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHead, Panel, Modal, Chip, inp, btn, ghost, lbl, logAudit, roleTone } from "@/components/kit";
 import { useResources, useRoles, useSystems, useAssignments, type Role } from "@/lib/hub-data";
 import { ACTIONS, ACTION_LABEL, EMPTY, toggleAction, type Action, type PermFlags } from "@/lib/permissions";
+import { ResourceFilters } from "@/components/resource-filters";
+import { batchPermissions, filterResources, type ResourceFilter } from "@/lib/resource-controls";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/roles")({
   validateSearch: (s: Record<string, unknown>) => ({ system: typeof s["system"] === "string" ? (s["system"] as string) : undefined }),
@@ -28,6 +31,8 @@ function RolesPage() {
   const systemId = search.system ?? systems[0]?.id;
   const roles = allRoles.filter((r) => r.system_id === systemId);
   const resources = allResources.filter((r) => r.system_id === systemId);
+  const [filter, setFilter] = useState<ResourceFilter>({ search: "", module: "", kind: "" });
+  const visible = filterResources(resources, filter);
   const [roleId, setRoleId] = useState<string | undefined>();
   const role = roles.find((r) => r.id === roleId) ?? roles[0];
 
@@ -35,7 +40,8 @@ function RolesPage() {
     queryKey: ["role-perms", role?.id],
     enabled: !!role,
     queryFn: async () => {
-      const { data, error } = await supabase.from("role_permissions").select("*").eq("role_id", role!.id);
+      if (!role) return [];
+      const { data, error } = await supabase.from("role_permissions").select("*").eq("role_id", role.id);
       if (error) throw error;
       return data;
     },
@@ -55,21 +61,14 @@ function RolesPage() {
 
   const modules = useMemo(() => {
     const m = new Map<string, typeof resources>();
-    for (const r of resources) m.set(r.module, [...(m.get(r.module) ?? []), r]);
+    for (const r of visible) m.set(r.module, [...(m.get(r.module) ?? []), r]);
     return [...m.entries()];
-  }, [resources]);
+  }, [visible]);
 
   const cell = (id: string) => draft[id] ?? EMPTY;
   const toggle = (id: string, a: Action) => setDraft((d) => ({ ...d, [id]: toggleAction(cell(id), a) }));
   const setColumn = (ids: string[], a: Action, on: boolean) =>
-    setDraft((d) => {
-      const n = { ...d };
-      for (const id of ids) {
-        const c = n[id] ?? EMPTY;
-        if (c[a] !== on) n[id] = toggleAction(c, a);
-      }
-      return n;
-    });
+    setDraft((d) => batchPermissions(d, ids, a, on));
 
   async function save() {
     if (!role) return;
@@ -116,13 +115,13 @@ function RolesPage() {
   return (
     <>
       <PageHead icon={<UserCog className="h-6 w-6 text-primary" />} title="Roles Matrix" desc="Build roles and choose which pages, features and data each one can view, create, edit or delete.">
-        <select className={`${inp} w-64`} value={systemId ?? ""} onChange={(e) => { setRoleId(undefined); navigate({ search: { system: e.target.value } }); }}>
+        <select aria-label="Select system" className={`${inp} w-64 max-w-full`} value={systemId ?? ""} onChange={(e) => { setRoleId(undefined); setFilter({ search: "", module: "", kind: "" }); navigate({ search: { system: e.target.value } }); }}>
           {systems.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
       </PageHead>
 
-      <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-        <Panel title={`Roles · ${roles.length}`} action={<button className={ghost} onClick={() => setEditing({ color: "primary" })}><Plus className="h-3.5 w-3.5" />New</button>}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <Panel className="min-w-0" title={`Roles · ${roles.length}`} action={<button className={ghost} onClick={() => setEditing({ color: "primary" })}><Plus className="h-3.5 w-3.5" />New</button>}>
           <div className="space-y-1.5">
             {roles.map((r) => {
               const count = assigns.filter((a) => a.role_id === r.id).length;
@@ -142,9 +141,10 @@ function RolesPage() {
         </Panel>
 
         <Panel
+          className="min-w-0"
           title={role ? `Permissions · ${role.name}` : "Permissions"}
           action={role && (
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               <button className={ghost} onClick={() => setEditing(role)}>Edit</button>
               <button className={ghost} onClick={() => { setCopyFrom(role.id); setEditing({ name: `${role.name} copy`, description: role.description, color: role.color }); }}><Copy className="h-3.5 w-3.5" />Duplicate</button>
               <button className={`${ghost} hover:text-destructive`} onClick={() => deleteRole(role)}><Trash2 className="h-3.5 w-3.5" /></button>
@@ -155,7 +155,14 @@ function RolesPage() {
           {!role ? (
             <p className="text-sm text-muted-foreground">Create a role to start building its permissions.</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="space-y-3">
+              <ResourceFilters value={filter} onChange={setFilter} modules={[...new Set(resources.map((r) => r.module))]} />
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-auto text-xs text-muted-foreground">{visible.length} / {resources.length} resources</span>
+                {ACTIONS.map((a) => { const all = visible.length > 0 && visible.every((r) => cell(r.id)[a]); return <Button key={a} variant="outline" size="sm" disabled={!visible.length} aria-pressed={all} onClick={() => setColumn(visible.map((r) => r.id), a, !all)}>{all ? "Clear" : "Grant"} {ACTION_LABEL[a]}</Button>; })}
+                <Button variant="outline" size="sm" disabled={!visible.length} onClick={() => setDraft((d) => batchPermissions(d, visible.map((r) => r.id), "all", false))}>Clear visible</Button>
+              </div>
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/60 text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -169,7 +176,8 @@ function RolesPage() {
                   ))}
                 </tbody>
               </table>
-              {resources.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">Add pages, features or data sets in Systems & Resources first.</p>}
+              {visible.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">No matching resources.</p>}
+              </div>
             </div>
           )}
         </Panel>
@@ -203,7 +211,7 @@ function RolesPage() {
 
 function ModuleRows({ mod, items, cell, toggle, setColumn }: {
   mod: string;
-  items: { id: string; kind: "page" | "feature" | "data"; name: string; key: string }[];
+  items: { id: string; kind: "page" | "feature" | "data"; name: string; key: string; description?: string | null }[];
   cell: (id: string) => PermFlags;
   toggle: (id: string, a: Action) => void;
   setColumn: (ids: string[], a: Action, on: boolean) => void;
@@ -217,7 +225,7 @@ function ModuleRows({ mod, items, cell, toggle, setColumn }: {
           const all = ids.every((id) => cell(id)[a]);
           return (
             <td key={a} className="text-center">
-              <button onClick={() => setColumn(ids, a, !all)} className="text-[10px] text-muted-foreground hover:text-primary">{all ? "none" : "all"}</button>
+              <Button variant="ghost" size="sm" aria-label={`${all ? "Clear" : "Grant"} ${ACTION_LABEL[a]} in ${mod}`} onClick={() => setColumn(ids, a, !all)} className="h-7 text-[10px] text-muted-foreground hover:text-primary">{all ? "none" : "all"}</Button>
             </td>
           );
         })}
@@ -227,24 +235,23 @@ function ModuleRows({ mod, items, cell, toggle, setColumn }: {
         return (
           <tr key={r.id} className="border-b border-border/30">
             <td className="py-2">
-              <div className="flex items-center gap-2">
+              <div className="flex min-w-56 items-center gap-2" title={r.description ?? undefined}>
                 <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>{r.name}</span>
-                <span className="font-mono text-[10px] text-muted-foreground">{r.key}</span>
+                <div><span>{r.name}</span><div className="font-mono text-[10px] text-muted-foreground">{r.key}</div></div>
               </div>
             </td>
             {ACTIONS.map((a) => {
               const on = cell(r.id)[a];
               return (
                 <td key={a} className="text-center">
-                  <button
+                  <Button variant="ghost" size="icon"
                     aria-label={`${ACTION_LABEL[a]} ${r.name}`}
                     aria-pressed={on}
                     onClick={() => toggle(r.id, a)}
                     className={`mx-auto grid h-7 w-7 place-items-center rounded-md border text-xs transition ${on ? "border-primary/50 bg-primary/20 text-primary shadow-[var(--shadow-glow)]" : "border-border/60 bg-background/40 text-muted-foreground/40 hover:border-primary/40"}`}
                   >
                     {on ? "✓" : "·"}
-                  </button>
+                  </Button>
                 </td>
               );
             })}

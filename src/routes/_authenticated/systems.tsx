@@ -6,6 +6,8 @@ import { Boxes, Plus, Trash2, KeyRound, Eye, RefreshCw, Copy } from "lucide-reac
 import { supabase } from "@/integrations/supabase/client";
 import { PageHead, Panel, Modal, Chip, inp, btn, ghost, lbl, logAudit } from "@/components/kit";
 import { useResources, useSystems, type System } from "@/lib/hub-data";
+import { ResourceFilters } from "@/components/resource-filters";
+import { filterResources, type ResourceFilter } from "@/lib/resource-controls";
 
 export const Route = createFileRoute("/_authenticated/systems")({
   head: () => ({ meta: [{ title: "Systems & Resources · Cortanex Access Hub" }, { name: "description", content: "Register systems and their pages, features and data sets." }, { property: "og:title", content: "Systems & Resources · Cortanex Access Hub" }, { property: "og:description", content: "Register systems and their pages, features and data sets." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -21,6 +23,8 @@ function SystemsPage() {
   const [sel, setSel] = useState<string | undefined>();
   const system = systems.find((s) => s.id === sel) ?? systems[0];
   const res = resources.filter((r) => r.system_id === system?.id);
+  const [filter, setFilter] = useState<ResourceFilter>({ search: "", module: "", kind: "" });
+  const visible = filterResources(res, filter);
   const [newRes, setNewRes] = useState({ kind: "page", name: "", key: "", module: "General" });
   const [key, setKey] = useState<string | null>(null);
   const [addingSystem, setAddingSystem] = useState(false);
@@ -69,12 +73,13 @@ function SystemsPage() {
       </PageHead>
       <div className="flex flex-wrap gap-2">
         {systems.map((s) => (
-          <button key={s.id} onClick={() => { setSel(s.id); setKey(null); }} className={`rounded-lg border px-3 py-1.5 text-xs transition ${system?.id === s.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-card/60 text-muted-foreground hover:text-foreground"}`}>{s.name}</button>
+          <button key={s.id} onClick={() => { setSel(s.id); setKey(null); setFilter({ search: "", module: "", kind: "" }); }} className={`rounded-lg border px-3 py-1.5 text-xs transition ${system?.id === s.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-card/60 text-muted-foreground hover:text-foreground"}`}>{s.name}</button>
         ))}
       </div>
       {system && (
-        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-          <Panel title={`Resources · ${res.length}`}>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <Panel className="min-w-0" title={`Resources · ${visible.length} / ${res.length}`}>
+            <div className="mb-4"><ResourceFilters value={filter} onChange={setFilter} modules={[...new Set(res.map((r) => r.module))]} /></div>
             <div className="mb-3 grid gap-2 sm:grid-cols-[110px_1fr_1fr_120px_auto]">
               <select className={inp} value={newRes.kind} onChange={(e) => setNewRes({ ...newRes, kind: e.target.value })}>
                 <option value="page">Page</option><option value="feature">Feature</option><option value="data">Data</option>
@@ -84,20 +89,21 @@ function SystemsPage() {
               <input className={inp} placeholder="Module" value={newRes.module} onChange={(e) => setNewRes({ ...newRes, module: e.target.value })} />
               <button className={btn} onClick={addResource}><Plus className="h-3.5 w-3.5" />Add</button>
             </div>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto"><table className="w-full min-w-[540px] text-sm">
               <thead><tr className="border-b border-border/60 text-[10px] uppercase tracking-wider text-muted-foreground"><th className="py-2 text-left">Type</th><th className="py-2 text-left">Name</th><th className="py-2 text-left">Key</th><th className="py-2 text-left">Module</th><th /></tr></thead>
               <tbody>
-                {res.map((r) => (
+                {visible.map((r) => (
                   <tr key={r.id} className="border-b border-border/30">
                     <td className="py-2"><Chip tone={kindTone[r.kind]}>{r.kind}</Chip></td>
-                    <td className="py-2">{r.name}</td>
+                    <td className="py-2"><div>{r.name}</div>{r.description && <p className="mt-1 max-w-sm text-[11px] text-muted-foreground">{r.description}</p>}</td>
                     <td className="py-2 font-mono text-[11px] text-muted-foreground">{r.key}</td>
                     <td className="py-2 text-xs text-muted-foreground">{r.module}</td>
                     <td className="py-2 text-right"><button aria-label={`Remove ${r.name}`} className="text-muted-foreground hover:text-destructive" onClick={() => removeResource(r.id, r.name)}><Trash2 className="h-3.5 w-3.5" /></button></td>
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
+            {visible.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">No matching resources.</p>}
           </Panel>
           <div className="space-y-4">
             <Panel title="System">
