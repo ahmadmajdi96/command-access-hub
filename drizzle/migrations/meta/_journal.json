@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792910678271,
+      "tag": "0000_access_hub_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792910693941,
+      "tag": "0001_fix_api_key_fn_schema",
+      "breakpoints": true
+    }
+  ]
+}

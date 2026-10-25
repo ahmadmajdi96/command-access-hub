@@ -1,0 +1,160 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Boxes, Plus, Trash2, KeyRound, Eye, RefreshCw, Copy } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { PageHead, Panel, Modal, Chip, inp, btn, ghost, lbl, logAudit } from "@/components/kit";
+import { useResources, useSystems, type System } from "@/lib/hub-data";
+
+export const Route = createFileRoute("/_authenticated/systems")({
+  head: () => ({ meta: [{ title: "Systems & Resources · Cortanex Access Hub" }, { name: "description", content: "Register systems and their pages, features and data sets." }] }),
+  component: SystemsPage,
+});
+
+const kindTone = { page: "info", feature: "warning", data: "success" } as const;
+
+function SystemsPage() {
+  const qc = useQueryClient();
+  const { data: systems = [] } = useSystems();
+  const { data: resources = [] } = useResources();
+  const [sel, setSel] = useState<string | undefined>();
+  const system = systems.find((s) => s.id === sel) ?? systems[0];
+  const res = resources.filter((r) => r.system_id === system?.id);
+  const [newRes, setNewRes] = useState({ kind: "page", name: "", key: "", module: "General" });
+  const [key, setKey] = useState<string | null>(null);
+  const [addingSystem, setAddingSystem] = useState(false);
+
+  async function addResource() {
+    if (!system || !newRes.name.trim()) return;
+    const k = (newRes.key || newRes.name).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const { error } = await supabase.from("resources").insert({ system_id: system.id, kind: newRes.kind, name: newRes.name.trim(), key: k, module: newRes.module.trim() || "General" });
+    if (error) { toast.error(error.message.includes("duplicate") ? "That key already exists" : error.message); return; }
+    await logAudit("resource.created", `${system.name} · ${newRes.name}`);
+    setNewRes({ ...newRes, name: "", key: "" });
+    qc.invalidateQueries({ queryKey: ["resources"] });
+  }
+
+  async function removeResource(id: string, name: string) {
+    if (!confirm(`Remove "${name}"? It disappears from every role in this system.`)) return;
+    const { error } = await supabase.from("resources").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    await logAudit("resource.deleted", name);
+    qc.invalidateQueries({ queryKey: ["resources"] });
+  }
+
+  async function showKey(rotate = false) {
+    if (!system) return;
+    if (rotate && !confirm("Rotate the key? The system stops working until it uses the new key.")) return;
+    const { data, error } = await supabase.rpc(rotate ? "rotate_system_api_key" : "get_system_api_key", { _system_id: system.id });
+    if (error) { toast.error(error.message); return; }
+    if (rotate) await logAudit("system.key_rotated", system.name);
+    setKey(data as string);
+  }
+
+  async function updateSystem(patch: Partial<System>) {
+    if (!system) return;
+    const { error } = await supabase.from("systems").update(patch).eq("id", system.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Saved");
+    qc.invalidateQueries({ queryKey: ["systems"] });
+  }
+
+  const endpoint = typeof window !== "undefined" ? `${window.location.origin}/api/public/v1/access` : "/api/public/v1/access";
+
+  return (
+    <>
+      <PageHead icon={<Boxes className="h-6 w-6 text-primary" />} title="Systems & Resources" desc="The pages, features and data sets each system exposes to the roles matrix.">
+        <button className={btn} onClick={() => setAddingSystem(true)}><Plus className="h-3.5 w-3.5" />Add system</button>
+      </PageHead>
+      <div className="flex flex-wrap gap-2">
+        {systems.map((s) => (
+          <button key={s.id} onClick={() => { setSel(s.id); setKey(null); }} className={`rounded-lg border px-3 py-1.5 text-xs transition ${system?.id === s.id ? "border-primary/40 bg-primary/10 text-primary" : "border-border/60 bg-card/60 text-muted-foreground hover:text-foreground"}`}>{s.name}</button>
+        ))}
+      </div>
+      {system && (
+        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+          <Panel title={`Resources · ${res.length}`}>
+            <div className="mb-3 grid gap-2 sm:grid-cols-[110px_1fr_1fr_120px_auto]">
+              <select className={inp} value={newRes.kind} onChange={(e) => setNewRes({ ...newRes, kind: e.target.value })}>
+                <option value="page">Page</option><option value="feature">Feature</option><option value="data">Data</option>
+              </select>
+              <input className={inp} placeholder="Name, e.g. Work Orders" value={newRes.name} onChange={(e) => setNewRes({ ...newRes, name: e.target.value })} />
+              <input className={`${inp} font-mono`} placeholder="key (auto)" value={newRes.key} onChange={(e) => setNewRes({ ...newRes, key: e.target.value })} />
+              <input className={inp} placeholder="Module" value={newRes.module} onChange={(e) => setNewRes({ ...newRes, module: e.target.value })} />
+              <button className={btn} onClick={addResource}><Plus className="h-3.5 w-3.5" />Add</button>
+            </div>
+            <table className="w-full text-sm">
+              <thead><tr className="border-b border-border/60 text-[10px] uppercase tracking-wider text-muted-foreground"><th className="py-2 text-left">Type</th><th className="py-2 text-left">Name</th><th className="py-2 text-left">Key</th><th className="py-2 text-left">Module</th><th /></tr></thead>
+              <tbody>
+                {res.map((r) => (
+                  <tr key={r.id} className="border-b border-border/30">
+                    <td className="py-2"><Chip tone={kindTone[r.kind]}>{r.kind}</Chip></td>
+                    <td className="py-2">{r.name}</td>
+                    <td className="py-2 font-mono text-[11px] text-muted-foreground">{r.key}</td>
+                    <td className="py-2 text-xs text-muted-foreground">{r.module}</td>
+                    <td className="py-2 text-right"><button aria-label={`Remove ${r.name}`} className="text-muted-foreground hover:text-destructive" onClick={() => removeResource(r.id, r.name)}><Trash2 className="h-3.5 w-3.5" /></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Panel>
+          <div className="space-y-4">
+            <Panel title="System">
+              <div className="space-y-3">
+                <label className={lbl}><span>Name</span><input key={`n${system.id}`} className={inp} defaultValue={system.name} onBlur={(e) => e.target.value !== system.name && updateSystem({ name: e.target.value })} /></label>
+                <label className={lbl}><span>App address</span><input key={`u${system.id}`} className={inp} placeholder="https://…" defaultValue={system.url ?? ""} onBlur={(e) => e.target.value !== (system.url ?? "") && updateSystem({ url: e.target.value || null })} /></label>
+                <label className="flex items-center gap-2 text-xs"><input type="checkbox" checked={system.is_active} onChange={(e) => updateSystem({ is_active: e.target.checked })} />Connection enabled</label>
+              </div>
+            </Panel>
+            <Panel title="Connection key" action={<KeyRound className="h-4 w-4 text-primary" />}>
+              <p className="text-[11px] text-muted-foreground">The system sends this key to ask what a signed-in person may do.</p>
+              {key ? (
+                <div className="mt-2 flex items-center gap-1.5">
+                  <code className="flex-1 truncate rounded-md border border-border/60 bg-background/50 px-2 py-1.5 font-mono text-[11px]">{key}</code>
+                  <button aria-label="Copy key" className={ghost} onClick={() => { navigator.clipboard.writeText(key); toast.success("Copied"); }}><Copy className="h-3.5 w-3.5" /></button>
+                </div>
+              ) : null}
+              <div className="mt-2 flex gap-2">
+                <button className={ghost} onClick={() => showKey(false)}><Eye className="h-3.5 w-3.5" />Reveal</button>
+                <button className={ghost} onClick={() => showKey(true)}><RefreshCw className="h-3.5 w-3.5" />Rotate</button>
+              </div>
+              <pre className="mt-3 overflow-x-auto rounded-lg border border-border/40 bg-background/40 p-2 font-mono text-[10px] text-muted-foreground">{`GET ${endpoint}?email=user@company.com
+x-api-key: <key>
+
+→ { roles: [...], permissions: [
+  { resource_key, can_view, can_create,
+    can_edit, can_delete } ] }`}</pre>
+            </Panel>
+          </div>
+        </div>
+      )}
+      <AddSystem open={addingSystem} onClose={() => setAddingSystem(false)} />
+    </>
+  );
+}
+
+function AddSystem({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const qc = useQueryClient();
+  const [f, setF] = useState({ name: "", description: "" });
+  async function save() {
+    const key = f.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    if (!key) return;
+    const { error } = await supabase.from("systems").insert({ name: f.name.trim(), key, description: f.description || null });
+    if (error) { toast.error(error.message); return; }
+    await logAudit("system.created", f.name);
+    toast.success("System added");
+    setF({ name: "", description: "" });
+    qc.invalidateQueries({ queryKey: ["systems"] });
+    onClose();
+  }
+  return (
+    <Modal open={open} onClose={onClose} title="Add system">
+      <div className="space-y-3">
+        <label className={lbl}><span>Name</span><input className={inp} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
+        <label className={lbl}><span>Description</span><input className={inp} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></label>
+        <div className="flex justify-end gap-2"><button className={ghost} onClick={onClose}>Cancel</button><button className={btn} onClick={save}>Add</button></div>
+      </div>
+    </Modal>
+  );
+}
