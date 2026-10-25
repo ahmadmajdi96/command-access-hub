@@ -29,7 +29,7 @@ function SystemsPage() {
     if (!system || !newRes.name.trim()) return;
     const k = (newRes.key || newRes.name).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const { error } = await supabase.from("resources").insert({ system_id: system.id, kind: newRes.kind, name: newRes.name.trim(), key: k, module: newRes.module.trim() || "General" });
-    if (error) return toast.error(error.message.includes("duplicate") ? "That key already exists" : error.message);
+    if (error) { toast.error(error.message.includes("duplicate") ? "That key already exists" : error.message); return; }
     await logAudit("resource.created", `${system.name} · ${newRes.name}`);
     setNewRes({ ...newRes, name: "", key: "" });
     qc.invalidateQueries({ queryKey: ["resources"] });
@@ -38,7 +38,7 @@ function SystemsPage() {
   async function removeResource(id: string, name: string) {
     if (!confirm(`Remove "${name}"? It disappears from every role in this system.`)) return;
     const { error } = await supabase.from("resources").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await logAudit("resource.deleted", name);
     qc.invalidateQueries({ queryKey: ["resources"] });
   }
@@ -47,7 +47,7 @@ function SystemsPage() {
     if (!system) return;
     if (rotate && !confirm("Rotate the key? The system stops working until it uses the new key.")) return;
     const { data, error } = await supabase.rpc(rotate ? "rotate_system_api_key" : "get_system_api_key", { _system_id: system.id });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     if (rotate) await logAudit("system.key_rotated", system.name);
     setKey(data as string);
   }
@@ -55,7 +55,7 @@ function SystemsPage() {
   async function updateSystem(patch: Partial<System>) {
     if (!system) return;
     const { error } = await supabase.from("systems").update(patch).eq("id", system.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Saved");
     qc.invalidateQueries({ queryKey: ["systems"] });
   }
@@ -141,7 +141,7 @@ function AddSystem({ open, onClose }: { open: boolean; onClose: () => void }) {
     const key = f.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     if (!key) return;
     const { error } = await supabase.from("systems").insert({ name: f.name.trim(), key, description: f.description || null });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await logAudit("system.created", f.name);
     toast.success("System added");
     setF({ name: "", description: "" });

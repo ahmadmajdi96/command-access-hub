@@ -54,13 +54,13 @@ export const roleTone: Record<string, string> = {
 };
 
 export function Chip({ tone = "primary", children }: { tone?: string; children: ReactNode }) {
-  return <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${roleTone[tone] ?? roleTone.primary}`}>{children}</span>;
+  return <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${roleTone[tone] ?? roleTone["primary"]}`}>{children}</span>;
 }
 
 export async function logAudit(action: string, target: string, details?: unknown) {
   const { data } = await supabase.auth.getUser();
   if (!data.user) return;
-  await supabase.from("audit_log").insert({ actor_id: data.user.id, actor_email: data.user.email, action, target, details: (details ?? null) as never });
+  await supabase.from("audit_log").insert({ actor_id: data.user.id, actor_email: data.user.email ?? null, action, target, details: (details ?? null) as never });
 }
 
 export const fmt = (s?: string | null) => (s ? new Date(s).toLocaleString() : "—");

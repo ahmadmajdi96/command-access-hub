@@ -9,7 +9,7 @@ import { useResources, useRoles, useSystems, useAssignments, type Role } from "@
 import { ACTIONS, ACTION_LABEL, EMPTY, toggleAction, type Action, type PermFlags } from "@/lib/permissions";
 
 export const Route = createFileRoute("/_authenticated/roles")({
-  validateSearch: (s: Record<string, unknown>) => ({ system: typeof s.system === "string" ? s.system : undefined }),
+  validateSearch: (s: Record<string, unknown>) => ({ system: typeof s["system"] === "string" ? (s["system"] as string) : undefined }),
   head: () => ({ meta: [{ title: "Roles Matrix · Cortanex Access Hub" }, { name: "description", content: "Build roles and set view, create, edit and delete rights." }] }),
   component: RolesPage,
 });
@@ -75,7 +75,7 @@ function RolesPage() {
     if (!role) return;
     const payload = resources.map((r) => ({ role_id: role.id, resource_id: r.id, ...cell(r.id) }));
     const { error } = await supabase.from("role_permissions").upsert(payload, { onConflict: "role_id,resource_id" });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await logAudit("role.permissions_updated", role.name, { system: systems.find((s) => s.id === systemId)?.name });
     toast.success("Permissions saved");
     qc.invalidateQueries({ queryKey: ["role-perms", role.id] });
@@ -85,12 +85,12 @@ function RolesPage() {
   const [copyFrom, setCopyFrom] = useState<string | null>(null);
 
   async function saveRole() {
-    if (!editing?.name?.trim() || !systemId) return toast.error("Name is required");
+    if (!editing?.name?.trim() || !systemId) { toast.error("Name is required"); return; }
     const body = { name: editing.name.trim(), description: editing.description ?? null, color: editing.color ?? "primary", system_id: systemId };
     const res = editing.id
       ? await supabase.from("roles").update(body).eq("id", editing.id).select().single()
       : await supabase.from("roles").insert(body).select().single();
-    if (res.error) return toast.error(res.error.message);
+    if (res.error) { toast.error(res.error.message); return; }
     if (!editing.id && copyFrom) {
       const { data: src } = await supabase.from("role_permissions").select("*").eq("role_id", copyFrom);
       if (src?.length) await supabase.from("role_permissions").insert(src.map((p) => ({ ...p, role_id: res.data.id })));
@@ -106,7 +106,7 @@ function RolesPage() {
   async function deleteRole(r: Role) {
     if (!confirm(`Delete role "${r.name}"? Users lose the access it gave them.`)) return;
     const { error } = await supabase.from("roles").delete().eq("id", r.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await logAudit("role.deleted", r.name);
     toast.success("Role deleted");
     setRoleId(undefined);
