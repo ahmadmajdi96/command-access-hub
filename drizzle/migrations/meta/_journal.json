@@ -15,6 +15,13 @@
       "when": 1792910693941,
       "tag": "0001_fix_api_key_fn_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792912454828,
+      "tag": "0002_one_time_super_admin_setup",
+      "breakpoints": true
     }
   ]
 }
