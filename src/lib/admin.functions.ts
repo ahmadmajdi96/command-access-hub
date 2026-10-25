@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { initialSetupCredentials, initializeFirstAdmin } from "./initial-setup";
 
 // This is deliberately public, but a durable, service-role-only claim and
-// auth creation trigger authorize it exactly once. Public signup stays off.
+// atomic finalization authorize it exactly once. Public signup stays off.
 export const initializeSuperAdmin = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => initialSetupCredentials.parse(input))
   .handler(async ({ data }) => {
@@ -21,6 +21,11 @@ export const initializeSuperAdmin = createServerFn({ method: "POST" })
       create: async (credentials) => {
         const { data: created, error } = await supabaseAdmin.auth.admin.createUser(credentials);
         if (error || !created.user) throw new Error("Could not initialize the account. Check your email and password and try again.");
+        return created.user.id;
+      },
+      finalize: async (token, userId) => {
+        const { data: finalized, error } = await supabaseAdmin.rpc("finalize_hub_setup", { _token: token, _user_id: userId });
+        if (error || finalized !== true) throw new Error("Your account was created, but administrator setup could not finish. Please retry shortly.");
       },
     });
   });

@@ -29,6 +29,13 @@
       "when": 1792912561793,
       "tag": "0003_restrict_initialization_claim_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792912687377,
+      "tag": "0004_finalize_super_admin_after_auth_creation",
+      "breakpoints": true
     }
   ]
 }

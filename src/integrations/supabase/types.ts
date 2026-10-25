@@ -312,6 +312,10 @@ export type Database = {
           resource_key: string
         }[]
       }
+      finalize_hub_setup: {
+        Args: { _token: string; _user_id: string }
+        Returns: boolean
+      }
       get_system_api_key: { Args: { _system_id: string }; Returns: string }
       has_role: {
         Args: {
