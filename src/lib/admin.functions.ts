@@ -24,7 +24,7 @@ async function audit(admin: any, ctx: Ctx, action: string, target: string, detai
 
 export const createUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z
       .object({
         email: z.string().email().max(255),
@@ -52,7 +52,7 @@ export const createUser = createServerFn({ method: "POST" })
 
 export const setUserActive = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid(), active: z.boolean() }).parse(i))
+  .validator((i: unknown) => z.object({ userId: z.string().uuid(), active: z.boolean() }).parse(i))
   .handler(async ({ data, context }) => {
     if (data.userId === (context as Ctx).userId) throw new Error("You cannot deactivate yourself");
     const admin = await assertAdmin(context as Ctx);
@@ -67,7 +67,7 @@ export const setUserActive = createServerFn({ method: "POST" })
 
 export const resetUserPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) =>
+  .validator((i: unknown) =>
     z.object({ userId: z.string().uuid(), password: z.string().min(10).max(128) }).parse(i),
   )
   .handler(async ({ data, context }) => {
@@ -80,7 +80,7 @@ export const resetUserPassword = createServerFn({ method: "POST" })
 
 export const setHubAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid(), admin: z.boolean() }).parse(i))
+  .validator((i: unknown) => z.object({ userId: z.string().uuid(), admin: z.boolean() }).parse(i))
   .handler(async ({ data, context }) => {
     if (data.userId === (context as Ctx).userId) throw new Error("You cannot change your own admin access");
     const admin = await assertAdmin(context as Ctx);
@@ -92,7 +92,7 @@ export const setHubAdmin = createServerFn({ method: "POST" })
 
 export const deleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
+  .validator((i: unknown) => z.object({ userId: z.string().uuid() }).parse(i))
   .handler(async ({ data, context }) => {
     if (data.userId === (context as Ctx).userId) throw new Error("You cannot delete yourself");
     const admin = await assertAdmin(context as Ctx);
