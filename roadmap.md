@@ -1,6 +1,11 @@
-# Resource inventory expansion
-- [x] Scan source snapshots of all four systems and reconcile their inventory.
-- [x] Upsert requested and verified resources, preserving existing resource IDs.
-- [x] Add tailored default roles and permissions without assigning users automatically.
-- [x] Add module/type/search filters and scoped batch permission actions.
-- [x] Verify inventory counts, permission rules and signed-in editing flow.
+# ManuQube AMS build (brief)
+- [x] 1 Security fixes S1–S4, S7, accounts, audit triggers
+- [x] 2 Catalog model (modules, resource tree, actions, resource_actions) + data migration
+- [x] 3 Roles v2, groups, composites, overrides, ams_effective_permissions, ams.* permissions
+- [x] 4 Seed 11 systems, pages, features, default roles
+- [ ] 5 New UI pages (user detail + per-user page/feature editor, effective access, groups, catalog, policies, reviews, my account)
+- [~] 6 Credentials + v1 hardening done; v2 access/check endpoints open
+- [ ] 7 OAuth/SSO, JWKS, sessions, MFA
+- [~] 8 perm_ver + outbox done; webhook dispatcher + cron open
+- [ ] 9 Integration guide, SDK file, test client
+- [~] 10 Tests: T01–T16, T20, T22–T25 pass; T17–T19, T21, T26 and F1–F5 wait on 5/7/9
