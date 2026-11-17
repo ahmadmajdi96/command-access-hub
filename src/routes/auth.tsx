@@ -13,7 +13,7 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Sign in · ManuQube AMS — Access Management" },
-      { name: "description", content: "Sign in to manage access across Cortanex MES and QC systems." },
+      { name: "description", content: "Sign in to manage access across ManuQube systems." },
       { property: "og:title", content: "Sign in · ManuQube AMS — Access Management" },
       { property: "og:description", content: "Secure administrator access to the ManuQube AMS — Access Management." },
       { property: "og:type", content: "website" },
