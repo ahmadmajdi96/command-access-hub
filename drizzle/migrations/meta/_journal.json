@@ -57,6 +57,13 @@
       "when": 1794887930337,
       "tag": "0007_ams_seed_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794888308639,
+      "tag": "0008_ams_selftest",
+      "breakpoints": true
     }
   ]
 }
