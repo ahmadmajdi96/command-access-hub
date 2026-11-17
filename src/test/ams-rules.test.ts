@@ -69,7 +69,6 @@ live("v1 legacy endpoint (T12, T15, T23, T14 over HTTP)", () => {
     const anon = createClient(URL_!, process.env["SUPABASE_PUBLISHABLE_KEY"]!, { auth: { persistSession: false } });
     await anon.auth.signInWithPassword({ email, password });
     const a = await anon.from("accounts").update({ status: "active" } as never).eq("user_id", userId).select();
-    expect(a.error ?? (a.data?.length ?? 0)).toBeTruthy(); // error, or 0 rows changed
     if (!a.error) expect(a.data).toHaveLength(0);
     const p = await anon.from("profiles").update({ email: "evil@ams.test" } as never).eq("id", userId);
     expect(p.error).not.toBeNull();
