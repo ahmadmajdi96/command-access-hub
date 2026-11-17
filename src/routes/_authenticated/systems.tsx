@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Boxes, Plus, Trash2, KeyRound, Eye, RefreshCw, Copy } from "lucide-react";
+import { Boxes, Plus, Trash2, KeyRound, RefreshCw, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHead, Panel, Modal, Chip, inp, btn, ghost, lbl, logAudit } from "@/components/kit";
 import { useResources, useSystems, type System } from "@/lib/hub-data";
@@ -10,7 +10,7 @@ import { ResourceFilters } from "@/components/resource-filters";
 import { filterResources, type ResourceFilter } from "@/lib/resource-controls";
 
 export const Route = createFileRoute("/_authenticated/systems")({
-  head: () => ({ meta: [{ title: "Systems & Resources · Cortanex Access Hub" }, { name: "description", content: "Register systems and their pages, features and data sets." }, { property: "og:title", content: "Systems & Resources · Cortanex Access Hub" }, { property: "og:description", content: "Register systems and their pages, features and data sets." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Systems & Resources · ManuQube AMS — Access Management" }, { name: "description", content: "Register systems and their pages, features and data sets." }, { property: "og:title", content: "Systems & Resources · ManuQube AMS — Access Management" }, { property: "og:description", content: "Register systems and their pages, features and data sets." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: SystemsPage,
 });
 
@@ -47,13 +47,30 @@ function SystemsPage() {
     qc.invalidateQueries({ queryKey: ["resources"] });
   }
 
-  async function showKey(rotate = false) {
+  const { data: creds = [] } = useQuery({
+    queryKey: ["credentials", system?.id],
+    enabled: !!system,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("system_credentials").select("id, client_id, prefix, type, scopes, status, expires_at, last_used_at").eq("system_id", system!.id).order("created_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
+  async function issueKey(rotateFrom?: string) {
     if (!system) return;
-    if (rotate && !confirm("Rotate the key? The system stops working until it uses the new key.")) return;
-    const { data, error } = await supabase.rpc(rotate ? "rotate_system_api_key" : "get_system_api_key", { _system_id: system.id });
+    if (rotateFrom && !confirm("Issue a new key? The old one keeps working for 7 days, then expires.")) return;
+    const { data, error } = await supabase.rpc("ams_create_credential", { _system: system.id, _type: "api_key", _scopes: ["access.read"], _expires_at: null as unknown as string, _rotate_from: rotateFrom as string, _overlap_days: 7 });
     if (error) { toast.error(error.message); return; }
-    if (rotate) await logAudit("system.key_rotated", system.name);
-    setKey(data as string);
+    setKey((data as { secret: string }[])[0]?.secret ?? null);
+    qc.invalidateQueries({ queryKey: ["credentials", system.id] });
+  }
+
+  async function revokeKey(id: string) {
+    if (!confirm("Revoke this key now? Systems using it stop working immediately.")) return;
+    const { error } = await supabase.rpc("ams_revoke_credential", { _id: id, _reason: "revoked in AMS" });
+    if (error) { toast.error(error.message); return; }
+    qc.invalidateQueries({ queryKey: ["credentials", system?.id] });
   }
 
   async function updateSystem(patch: Partial<System>) {
@@ -114,16 +131,30 @@ function SystemsPage() {
               </div>
             </Panel>
             <Panel title="Connection key" action={<KeyRound className="h-4 w-4 text-primary" />}>
-              <p className="text-[11px] text-muted-foreground">The system sends this key to ask what a signed-in person may do.</p>
+              <p className="text-[11px] text-muted-foreground">Keys are stored only as fingerprints. A new key is shown once — copy it now.</p>
               {key ? (
                 <div className="mt-2 flex items-center gap-1.5">
-                  <code className="flex-1 truncate rounded-md border border-border/60 bg-background/50 px-2 py-1.5 font-mono text-[11px]">{key}</code>
+                  <code className="flex-1 truncate rounded-md border border-warning/50 bg-background/50 px-2 py-1.5 font-mono text-[11px]">{key}</code>
                   <button aria-label="Copy key" className={ghost} onClick={() => { navigator.clipboard.writeText(key); toast.success("Copied"); }}><Copy className="h-3.5 w-3.5" /></button>
                 </div>
               ) : null}
+              <ul className="mt-2 space-y-1.5">
+                {creds.map((c) => (
+                  <li key={c.id} className="rounded-md border border-border/50 px-2 py-1.5 text-[11px]">
+                    <div className="flex items-center justify-between gap-2"><span className="font-mono">{c.prefix}…</span><Chip tone={c.status === "active" ? "success" : "destructive"}>{c.status}</Chip></div>
+                    <div className="mt-0.5 text-muted-foreground">{c.client_id} · last used {c.last_used_at ? new Date(c.last_used_at).toLocaleString() : "never"}{c.expires_at ? ` · expires ${new Date(c.expires_at).toLocaleDateString()}` : ""}</div>
+                    {c.status === "active" && (
+                      <div className="mt-1 flex gap-2">
+                        <button className={ghost} onClick={() => issueKey(c.id)}><RefreshCw className="h-3 w-3" />Rotate</button>
+                        <button className={`${ghost} hover:text-destructive`} onClick={() => revokeKey(c.id)}>Revoke</button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+                {creds.length === 0 && <li className="text-[11px] text-muted-foreground">No keys yet.</li>}
+              </ul>
               <div className="mt-2 flex gap-2">
-                <button className={ghost} onClick={() => showKey(false)}><Eye className="h-3.5 w-3.5" />Reveal</button>
-                <button className={ghost} onClick={() => showKey(true)}><RefreshCw className="h-3.5 w-3.5" />Rotate</button>
+                <button className={ghost} onClick={() => issueKey()}><Plus className="h-3.5 w-3.5" />New key</button>
               </div>
               <pre className="mt-3 overflow-x-auto rounded-lg border border-border/40 bg-background/40 p-2 font-mono text-[10px] text-muted-foreground">{`GET ${endpoint}?email=user@company.com
 x-api-key: <key>

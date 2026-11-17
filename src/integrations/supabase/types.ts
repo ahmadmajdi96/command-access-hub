@@ -1347,6 +1347,14 @@ export type Database = {
         Returns: undefined
       }
       ams_role_holders: { Args: { _role: string }; Returns: string[] }
+      ams_selftest: {
+        Args: never
+        Returns: {
+          detail: string
+          passed: boolean
+          test: string
+        }[]
+      }
       ams_verify_audit_chain: {
         Args: never
         Returns: {

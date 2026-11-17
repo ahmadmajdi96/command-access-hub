@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { KeyRound, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { initializeSuperAdmin } from "@/lib/admin.functions";
@@ -12,10 +12,10 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in · Cortanex Access Hub" },
-      { name: "description", content: "Sign in to manage access across Cortanex MES and QC systems." },
-      { property: "og:title", content: "Sign in · Cortanex Access Hub" },
-      { property: "og:description", content: "Secure administrator access to the Cortanex Access Hub." },
+      { title: "Sign in · ManuQube AMS — Access Management" },
+      { name: "description", content: "Sign in to manage access across ManuQube systems." },
+      { property: "og:title", content: "Sign in · ManuQube AMS — Access Management" },
+      { property: "og:description", content: "Secure administrator access to the ManuQube AMS — Access Management." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -43,6 +43,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [bootstrapToken, setBootstrapToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -60,7 +61,7 @@ function AuthPage() {
       if (mode !== "forgot") {
         if (mode === "setup") {
           if (password !== confirmPassword) throw new Error("Passwords do not match.");
-          await initialize({ data: { email, password } });
+          await initialize({ data: { email, password, bootstrap_token: bootstrapToken } });
           setMode("signin");
           void setup.refetch();
         }
@@ -93,7 +94,7 @@ function AuthPage() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-semibold tracking-tight">Cortanex Access Hub</h1>
+            <h1 className="font-display text-xl font-semibold tracking-tight">ManuQube AMS — Access Management</h1>
             <p className="text-xs text-muted-foreground">Users, roles & permissions for every system</p>
           </div>
         </div>
@@ -122,6 +123,15 @@ function AuthPage() {
                 <div className="relative mt-1">
                   <Lock className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   <input type="password" required minLength={10} maxLength={128} autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat your password" className={input} />
+                </div>
+              </label>
+            )}
+            {mode === "setup" && (
+              <label className="block">
+                <span className="text-[11px] uppercase tracking-wider text-muted-foreground">Setup token</span>
+                <div className="relative mt-1">
+                  <KeyRound className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input type="password" required autoComplete="off" value={bootstrapToken} onChange={(e) => setBootstrapToken(e.target.value)} placeholder="One-time setup token" className={input} />
                 </div>
               </label>
             )}

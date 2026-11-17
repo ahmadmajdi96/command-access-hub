@@ -57,6 +57,27 @@
       "when": 1794887930337,
       "tag": "0007_ams_seed_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794888308639,
+      "tag": "0008_ams_selftest",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794888324760,
+      "tag": "0009_fix_last_super_admin_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794888347033,
+      "tag": "0010_fix_selftest_site_case",
+      "breakpoints": true
     }
   ]
 }

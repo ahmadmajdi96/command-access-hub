@@ -5,10 +5,10 @@ export const Route = createFileRoute("/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Cortanex Access Hub" },
-      { name: "description", content: "Manage users, roles and permissions across all Cortanex systems." },
-      { property: "og:title", content: "Cortanex Access Hub" },
-      { property: "og:description", content: "Manage users, roles and permissions across all Cortanex systems." },
+      { title: "ManuQube AMS — Access Management" },
+      { name: "description", content: "Manage users, roles and permissions across all ManuQube systems." },
+      { property: "og:title", content: "ManuQube AMS — Access Management" },
+      { property: "og:description", content: "Manage users, roles and permissions across all ManuQube systems." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

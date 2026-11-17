@@ -32,3 +32,13 @@ export async function initializeFirstAdmin(input: Credentials, token: string, op
   await operations.finalize(token, userId);
   return { ok: true };
 }
+/** Constant-time comparison of the presented setup token with AMS_BOOTSTRAP_TOKEN. Missing secret = setup closed. */
+export async function bootstrapTokenMatches(presented: string, expected: string | undefined) {
+  if (!expected || expected.length < 16 || !presented) return false;
+  const enc = new TextEncoder();
+  const [a, b] = await Promise.all([crypto.subtle.digest("SHA-256", enc.encode(presented)), crypto.subtle.digest("SHA-256", enc.encode(expected))]);
+  const x = new Uint8Array(a), y = new Uint8Array(b);
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x[i]! ^ y[i]!;
+  return diff === 0;
+}
