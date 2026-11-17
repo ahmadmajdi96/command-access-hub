@@ -57,10 +57,7 @@ export function Chip({ tone = "primary", children }: { tone?: string; children: 
   return <span className={`inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium ${roleTone[tone] ?? roleTone["primary"]}`}>{children}</span>;
 }
 
-export async function logAudit(action: string, target: string, details?: unknown) {
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) return;
-  await supabase.from("audit_log").insert({ actor_id: data.user.id, actor_email: data.user.email ?? null, action, target, details: (details ?? null) as never });
-}
+// History is written by database triggers (append-only, hash-chained); browsers cannot insert rows.
+export async function logAudit(_action: string, _target: string, _details?: unknown) {}
 
 export const fmt = (s?: string | null) => (s ? new Date(s).toLocaleString() : "—");
