@@ -1260,6 +1260,13 @@ export type Database = {
             referencedRelation: "roles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_system_roles_user_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -1273,6 +1280,10 @@ export type Database = {
         Args: { _action: string; _resource: string; _uid: string }
         Returns: boolean
       }
+      ams_bump: {
+        Args: { _event: string; _system: string; _uid: string }
+        Returns: undefined
+      }
       ams_can_manage_user: {
         Args: { _actor: string; _perm: string; _target: string }
         Returns: boolean
@@ -1280,6 +1291,21 @@ export type Database = {
       ams_check: {
         Args: { _permission_key: string; _site_id?: string; _user_id: string }
         Returns: boolean
+      }
+      ams_create_credential: {
+        Args: {
+          _expires_at: string
+          _overlap_days?: number
+          _rotate_from?: string
+          _scopes: string[]
+          _system: string
+          _type: string
+        }
+        Returns: {
+          client_id: string
+          credential_id: string
+          secret: string
+        }[]
       }
       ams_effective_core: {
         Args: { _site?: string; _system: string; _uid: string }
@@ -1305,12 +1331,45 @@ export type Database = {
         }[]
       }
       ams_has: { Args: { _perm: string; _uid: string }; Returns: boolean }
+      ams_hash_secret: {
+        Args: { _salt: string; _secret: string }
+        Returns: string
+      }
       ams_holds_admin_role: { Args: { _uid: string }; Returns: boolean }
       ams_is_super_admin: { Args: { _uid: string }; Returns: boolean }
       ams_my_permissions: { Args: never; Returns: string[] }
       ams_reassign_and_delete_role: {
         Args: { _reassign_to: string; _role: string }
         Returns: undefined
+      }
+      ams_revoke_credential: {
+        Args: { _id: string; _reason: string }
+        Returns: undefined
+      }
+      ams_role_holders: { Args: { _role: string }; Returns: string[] }
+      ams_verify_audit_chain: {
+        Args: never
+        Returns: {
+          checked: number
+          first_bad_seq: number
+          ok: boolean
+        }[]
+      }
+      ams_verify_credential: {
+        Args: {
+          _client_id: string
+          _endpoint: string
+          _ip: string
+          _scope: string
+          _secret: string
+        }
+        Returns: {
+          credential_id: string
+          status: number
+          system_code: string
+          system_id: string
+          system_key: string
+        }[]
       }
       claim_hub_setup: { Args: { _token: string }; Returns: boolean }
       effective_permissions: {
@@ -1330,7 +1389,6 @@ export type Database = {
         Args: { _token: string; _user_id: string }
         Returns: boolean
       }
-      get_system_api_key: { Args: { _system_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1341,7 +1399,6 @@ export type Database = {
       hub_setup_available: { Args: never; Returns: boolean }
       is_hub_admin: { Args: { _user_id: string }; Returns: boolean }
       release_hub_setup: { Args: { _token: string }; Returns: undefined }
-      rotate_system_api_key: { Args: { _system_id: string }; Returns: string }
     }
     Enums: {
       account_status: "invited" | "active" | "suspended" | "locked" | "disabled"
