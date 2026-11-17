@@ -50,6 +50,13 @@
       "when": 1794887862527,
       "tag": "0006_ams_propagation_audit_credentials",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794887930337,
+      "tag": "0007_ams_seed_catalog",
+      "breakpoints": true
     }
   ]
 }
