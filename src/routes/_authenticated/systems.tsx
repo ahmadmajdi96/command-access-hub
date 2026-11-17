@@ -111,7 +111,7 @@ function SystemsPage() {
               <tbody>
                 {visible.map((r) => (
                   <tr key={r.id} className="border-b border-border/30">
-                    <td className="py-2"><Chip tone={kindTone[r.kind]}>{r.kind}</Chip></td>
+                    <td className="py-2"><Chip tone={kindTone[r.kind] ?? "info"}>{r.kind}</Chip></td>
                     <td className="py-2"><div>{r.name}</div>{r.description && <p className="mt-1 max-w-sm text-[11px] text-muted-foreground">{r.description}</p>}</td>
                     <td className="py-2 font-mono text-[11px] text-muted-foreground">{r.key}</td>
                     <td className="py-2 text-xs text-muted-foreground">{r.module}</td>
