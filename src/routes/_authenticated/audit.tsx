@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHead, Panel, fmt } from "@/components/kit";
 
 export const Route = createFileRoute("/_authenticated/audit")({
-  head: () => ({ meta: [{ title: "Audit Log · Cortanex Access Hub" }, { name: "description", content: "Every access change, who made it and when." }, { property: "og:title", content: "Audit Log · Cortanex Access Hub" }, { property: "og:description", content: "Every access change, who made it and when." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Audit Log · ManuQube AMS — Access Management" }, { name: "description", content: "Every access change, who made it and when." }, { property: "og:title", content: "Audit Log · ManuQube AMS — Access Management" }, { property: "og:description", content: "Every access change, who made it and when." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: AuditPage,
 });
 

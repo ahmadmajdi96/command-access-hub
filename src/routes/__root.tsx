@@ -78,9 +78,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Cortanex Access Hub" },
+      { title: "ManuQube AMS — Access Management" },
       { name: "description", content: "Central users, roles and permissions for Cortanex MES and QC systems." },
-      { property: "og:title", content: "Cortanex Access Hub" },
+      { property: "og:title", content: "ManuQube AMS — Access Management" },
       { property: "og:description", content: "Central users, roles and permissions for Cortanex MES and QC systems." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

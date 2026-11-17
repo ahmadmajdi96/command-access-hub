@@ -7,9 +7,9 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Reset password · Cortanex Access Hub" },
+      { title: "Reset password · ManuQube AMS — Access Management" },
       { name: "description", content: "Choose a new password for your Cortanex account." },
-      { property: "og:title", content: "Reset password · Cortanex Access Hub" },
+      { property: "og:title", content: "Reset password · ManuQube AMS — Access Management" },
       { property: "og:description", content: "Choose a new password for your Cortanex account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

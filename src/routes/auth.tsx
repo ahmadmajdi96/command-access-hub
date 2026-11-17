@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
+import { KeyRound, Loader2, Lock, Mail, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { initializeSuperAdmin } from "@/lib/admin.functions";
@@ -12,10 +12,10 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in · Cortanex Access Hub" },
+      { title: "Sign in · ManuQube AMS — Access Management" },
       { name: "description", content: "Sign in to manage access across Cortanex MES and QC systems." },
-      { property: "og:title", content: "Sign in · Cortanex Access Hub" },
-      { property: "og:description", content: "Secure administrator access to the Cortanex Access Hub." },
+      { property: "og:title", content: "Sign in · ManuQube AMS — Access Management" },
+      { property: "og:description", content: "Secure administrator access to the ManuQube AMS — Access Management." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -94,7 +94,7 @@ function AuthPage() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="font-display text-xl font-semibold tracking-tight">Cortanex Access Hub</h1>
+            <h1 className="font-display text-xl font-semibold tracking-tight">ManuQube AMS — Access Management</h1>
             <p className="text-xs text-muted-foreground">Users, roles & permissions for every system</p>
           </div>
         </div>

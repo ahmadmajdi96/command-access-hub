@@ -51,7 +51,7 @@ function AppSidebar() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div className="flex min-w-0 flex-col leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-semibold tracking-tight">Cortanex Access Hub</span>
+            <span className="text-sm font-semibold tracking-tight">ManuQube AMS — Access Management</span>
             <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Identity · v1.0</span>
           </div>
         </Link>

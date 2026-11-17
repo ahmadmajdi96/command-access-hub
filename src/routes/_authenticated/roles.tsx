@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/roles")({
   validateSearch: (s: Record<string, unknown>) => ({ system: typeof s["system"] === "string" ? (s["system"] as string) : undefined }),
-  head: () => ({ meta: [{ title: "Roles Matrix · Cortanex Access Hub" }, { name: "description", content: "Build roles and set view, create, edit and delete rights." }, { property: "og:title", content: "Roles Matrix · Cortanex Access Hub" }, { property: "og:description", content: "Build roles and set view, create, edit and delete rights." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Roles Matrix · ManuQube AMS — Access Management" }, { name: "description", content: "Build roles and set view, create, edit and delete rights." }, { property: "og:title", content: "Roles Matrix · ManuQube AMS — Access Management" }, { property: "og:description", content: "Build roles and set view, create, edit and delete rights." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: RolesPage,
 });
 

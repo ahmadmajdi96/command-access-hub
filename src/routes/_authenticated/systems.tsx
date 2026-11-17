@@ -10,7 +10,7 @@ import { ResourceFilters } from "@/components/resource-filters";
 import { filterResources, type ResourceFilter } from "@/lib/resource-controls";
 
 export const Route = createFileRoute("/_authenticated/systems")({
-  head: () => ({ meta: [{ title: "Systems & Resources · Cortanex Access Hub" }, { name: "description", content: "Register systems and their pages, features and data sets." }, { property: "og:title", content: "Systems & Resources · Cortanex Access Hub" }, { property: "og:description", content: "Register systems and their pages, features and data sets." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
+  head: () => ({ meta: [{ title: "Systems & Resources · ManuQube AMS — Access Management" }, { name: "description", content: "Register systems and their pages, features and data sets." }, { property: "og:title", content: "Systems & Resources · ManuQube AMS — Access Management" }, { property: "og:description", content: "Register systems and their pages, features and data sets." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: SystemsPage,
 });
 
