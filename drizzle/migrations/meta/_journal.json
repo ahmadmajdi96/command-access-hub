@@ -64,6 +64,13 @@
       "when": 1794888308639,
       "tag": "0008_ams_selftest",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794888324760,
+      "tag": "0009_fix_last_super_admin_guard",
+      "breakpoints": true
     }
   ]
 }
