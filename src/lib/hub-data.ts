@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type System = { id: string; key: string; name: string; description: string | null; url: string | null; is_active: boolean };
-export type Resource = { id: string; system_id: string; kind: "page" | "feature" | "data"; key: string; name: string; module: string; description: string | null };
+export type Resource = { id: string; system_id: string; kind: "page" | "feature" | "data" | "api" | "report"; key: string; name: string; module: string; description: string | null };
 export type Role = { id: string; system_id: string; name: string; description: string | null; color: string };
 export type Profile = { id: string; email: string; full_name: string | null; job_title: string | null; is_active: boolean; created_at: string };
 

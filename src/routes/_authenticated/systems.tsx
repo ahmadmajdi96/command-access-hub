@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/systems")({
   component: SystemsPage,
 });
 
-const kindTone = { page: "info", feature: "warning", data: "success" } as const;
+const kindTone: Record<string, "info" | "warning" | "success"> = { page: "info", feature: "warning", data: "success", api: "success", report: "info" };
 
 function SystemsPage() {
   const qc = useQueryClient();

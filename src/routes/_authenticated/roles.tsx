@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/roles")({
   component: RolesPage,
 });
 
-const kindIcon = { page: FileText, feature: Zap, data: Database };
+const kindIcon: Record<string, typeof FileText> = { page: FileText, feature: Zap, data: Database, api: Database, report: FileText };
 const COLORS = Object.keys(roleTone);
 
 function RolesPage() {
@@ -231,7 +231,7 @@ function ModuleRows({ mod, items, cell, toggle, setColumn }: {
         })}
       </tr>
       {items.map((r) => {
-        const Icon = kindIcon[r.kind];
+        const Icon = kindIcon[r.kind] ?? FileText;
         return (
           <tr key={r.id} className="border-b border-border/30">
             <td className="py-2">
